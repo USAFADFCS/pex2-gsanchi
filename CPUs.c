@@ -14,7 +14,12 @@
  *          All accesses to readyQ and finishedQ are protected by their
  *          respective mutex locks.
  * ===========================================================
- * Documentation Statement: <describe any help received>
+ * Documentation Statement: I used this website to learn more
+ * about the preemptive processes and how it works for each 
+ * check https://www.geeksforgeeks.org/operating-systems/preemptive-and-non-preemptive-scheduling/.
+ * I also used the class textbook to help me conceptualize the 
+ * algorithms and used the provided slides to help me implement
+ * and understand each function.
  * =========================================================== */
 
 #include <stdio.h>
@@ -276,6 +281,10 @@ void* SRTFcpu(void* param) {
             }
         }
 
+        //Release the lock only after the swap is performed, lock for min time only
+        pthread_mutex_unlock(&(svars->readyQLock));
+
+
         //Once process is selected, decrement burstremaining
         if (p != NULL) {
             p->burstRemaining--;
@@ -291,10 +300,6 @@ void* SRTFcpu(void* param) {
                 p = NULL;
             }
         }
-        
-
-        //Release the lock only after the swap is performed
-        pthread_mutex_unlock(&(svars->readyQLock));
 
         sem_post(svars->mainSem);
     }
@@ -348,10 +353,13 @@ void* PPcpu(void* param) {
             }
         }
 
+        //Release the lock only after the swap is performed, lock for min time only
+        pthread_mutex_unlock(&(svars->readyQLock));
+
+
         //Once process is selected, decrement burstremaining
         if (p != NULL) {
             p->burstRemaining--;
-            //p->priority++;
 
             if (p->burstRemaining == 0) {
                 // Process is done — move it to finishedQ so main can
@@ -364,11 +372,7 @@ void* PPcpu(void* param) {
                 p = NULL;
             }
         }
-        
-
-        //Release the lock only after the swap is performed
-        pthread_mutex_unlock(&(svars->readyQLock));
-
+    
         sem_post(svars->mainSem);
     }
 }
