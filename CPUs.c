@@ -224,11 +224,86 @@ void* RRcpu(void* param) {
     int threadNum = ((CpuParams*) param)->threadNumber;
     SharedVars* svars = ((CpuParams*) param)->svars;
 
-    // Process* p = NULL;  // TODO: uncomment when you implement this function
+    Process* p = NULL;  // TODO: uncomment when you implement this function
+
+    int quantum = svars->quantum;
+    int curQ = quantum; 
 
     while (1) {
+        
         sem_wait(svars->cpuSems[threadNum]);
 
+        //Lock it first them perform the check to prevent race conditions
+        pthread_mutex_lock(&(svars->readyQLock));
+        
+        //Check each iteration to see which process has the shortest remaining time
+        
+        
+        //If quantum is 0, a new process must be chosen
+        //If p != NULL then it is not idle, needs new process
+        if(p != NULL && curQ == 0){    
+            
+            //Reinsert old process because it no longer has the shortest burst
+            //put the process back into the readyQ to after quantum expires
+            p->requeued = true;
+            qInsert(&(svars->readyQ), p);
+            p = NULL;
+            //int index = qPriority(&(svars->readyQ));
+
+            //Get the node that we need
+            p = qRemove(&(svars->readyQ), 0);
+
+            //Check if qRemove returned NULL before using p
+            if (p == NULL) {
+                // readyQ was empty — CPU stays idle this tick.
+                printf("No process to schedule\n");
+            }   
+            else{
+                printf("Scheduling PID %d\n", p->PID);
+            }
+
+            curQ = quantum;
+        }
+
+        if(p == NULL){
+            p = qRemove(&(svars->readyQ), 0);
+
+            //Check if qRemove returned NULL before using p
+            if (p == NULL) {
+                // readyQ was empty — CPU stays idle this tick.
+                printf("No process to schedule\n");
+            }   
+            else{
+                printf("Scheduling PID %d\n", p->PID);
+            }
+        }
+
+        
+
+        //Release the lock only after the swap is performed, lock for min time only
+        pthread_mutex_unlock(&(svars->readyQLock));        
+    
+
+        //Once process is selected, decrement burstremaining
+        if (p != NULL) {
+            p->burstRemaining--;
+            curQ--;
+
+            if (p->burstRemaining == 0) {
+                // Process is done — move it to finishedQ so main can
+                // compute and print wait-time statistics at simulation end.
+                pthread_mutex_lock(&(svars->finishedQLock));
+                qInsert(&(svars->finishedQ), p);
+                pthread_mutex_unlock(&(svars->finishedQLock));
+
+                //reset quantum if process finishes early
+                curQ  = quantum;
+
+                // CPU is now idle; it will select a new process next tick.
+                p = NULL;
+            }
+        }
+    
         sem_post(svars->mainSem);
     }
 }
