@@ -251,7 +251,7 @@ void* SRTFcpu(void* param) {
         
         //If current process has a long burst remaining, get new process
         //If p == NULL CPU has nothing to run
-        if(qShortestBR(&(svars->readyQ)) < p->burstRemaining || p == NULL){    
+        if(p == NULL || qShortestBR(&(svars->readyQ)) < p->burstRemaining){    
             
             //Reinsert old process because it no longer has the shortest burst
             if(p != NULL){
