@@ -191,9 +191,11 @@ void* NPPcpu(void* param) {
                 printf("Scheduling PID %d\n", p->PID);
             }
 
+            //Unlock process here since the swap is done and doesn't need to be locked anymore
             pthread_mutex_unlock(&(svars->readyQLock));
         }
 
+        //If the cpu is not idle
         if (p != NULL) {
             p->burstRemaining--;
 
@@ -208,11 +210,8 @@ void* NPPcpu(void* param) {
                 p = NULL;
             }
         }
-
         sem_post(svars->mainSem);
     }
-
-
 }
 
 // ============================================================
@@ -238,7 +237,6 @@ void* RRcpu(void* param) {
         
         //Check each iteration to see which process has the shortest remaining time
         
-        
         //If quantum is 0, a new process must be chosen
         //If p != NULL then it is not idle, needs new process
         if(p != NULL && curQ == 0){    
@@ -262,10 +260,12 @@ void* RRcpu(void* param) {
                 printf("Scheduling PID %d\n", p->PID);
             }
 
+            //Reset the current quantum to the max since it == 0
             curQ = quantum;
         }
 
-        if(p == NULL){
+        //If the quantum isn't zero and the cpu idle, choose the head process
+        else if(p == NULL){
             p = qRemove(&(svars->readyQ), 0);
 
             //Check if qRemove returned NULL before using p
@@ -277,8 +277,6 @@ void* RRcpu(void* param) {
                 printf("Scheduling PID %d\n", p->PID);
             }
         }
-
-        
 
         //Release the lock only after the swap is performed, lock for min time only
         pthread_mutex_unlock(&(svars->readyQLock));        
@@ -328,7 +326,6 @@ void* SRTFcpu(void* param) {
         
         //Check each iteration to see which process has the shortest remaining time
         
-        
         //If current process has a long burst remaining, get new process
         //If p == NULL CPU has nothing to run
         if(p == NULL || qShortestBR(&(svars->readyQ)) < p->burstRemaining){    
@@ -341,6 +338,7 @@ void* SRTFcpu(void* param) {
                 p = NULL;
             }
             
+            //Get the index of the process with the shortest remaining burst time
             int index = qShortest(&(svars->readyQ));
 
             //Get the node that we need
@@ -358,7 +356,6 @@ void* SRTFcpu(void* param) {
 
         //Release the lock only after the swap is performed, lock for min time only
         pthread_mutex_unlock(&(svars->readyQLock));
-
 
         //Once process is selected, decrement burstremaining
         if (p != NULL) {
@@ -400,7 +397,6 @@ void* PPcpu(void* param) {
         
         //Check each iteration to see which process has the shortest remaining time
         
-        
         //If current process has a long burst remaining, get new process
         //If p == NULL CPU has nothing to run
         if(p == NULL || qGetPriority(&(svars->readyQ)) < p->priority){    
@@ -413,6 +409,7 @@ void* PPcpu(void* param) {
                 p = NULL;
             }
             
+            //Get the index of the process with the highest (lowest number) priority
             int index = qPriority(&(svars->readyQ));
 
             //Get the node that we need
@@ -430,7 +427,6 @@ void* PPcpu(void* param) {
 
         //Release the lock only after the swap is performed, lock for min time only
         pthread_mutex_unlock(&(svars->readyQLock));
-
 
         //Once process is selected, decrement burstremaining
         if (p != NULL) {
