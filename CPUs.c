@@ -63,6 +63,7 @@ void* FIFOcpu(void* param) {
             // always the oldest arrival — that is the FIFO selection rule).
             p = qRemove(&(svars->readyQ), 0);
 
+            //Check if qRemove returned NULL before using p
             if (p == NULL) {
                 // readyQ was empty — CPU stays idle this tick.
                 printf("No process to schedule\n");
@@ -122,6 +123,7 @@ void* SJFcpu(void* param) {
             int index = qShortest(&(svars->readyQ));
             p = qRemove(&(svars->readyQ), index);
 
+            //Check if qRemove returned NULL before using p
             if (p == NULL) {
                 // readyQ was empty — CPU stays idle this tick.
                 printf("No process to schedule\n");
@@ -176,6 +178,7 @@ void* NPPcpu(void* param) {
             int index = qPriority(&(svars->readyQ));
             p = qRemove(&(svars->readyQ), index);
 
+            //Check if qRemove returned NULL before using p
             if (p == NULL) {
                 // readyQ was empty — CPU stays idle this tick.
                 printf("No process to schedule\n");
@@ -236,8 +239,6 @@ void* SRTFcpu(void* param) {
 
     Process* p = NULL;  // TODO: uncomment when you implement this function
 
-    int min = qShortestBR(&(svars->readyQ));
-
     while (1) {
         
         sem_wait(svars->cpuSems[threadNum]);
@@ -245,40 +246,52 @@ void* SRTFcpu(void* param) {
         //Lock it first them perform the check to prevent race conditions
         pthread_mutex_lock(&(svars->readyQLock));
         
-        //Check each loop to see which process has the shortest remaining time
-        if(){    
-            p = qShortest(&(svars->readyQ));
+        //Check each iteration to see which process has the shortest remaining time
+        
+        
+        //If current process has a long burst remaining, get new process
+        //If p == NULL CPU has nothing to run
+        if(qShortestBR(&(svars->readyQ)) < p->burstRemaining || p == NULL){    
+            
+            //Reinsert old process because it no longer has the shortest burst
+            if(p != NULL){
+                //put the process back into the readyQ to continue
+                p->requeued = true;
+                qInsert(&(svars->readyQ), p);
+                p = NULL;
+            }
+            
+            int index = qShortest(&(svars->readyQ));
 
-            //Not going to remove, just going to remove a burst
-            //p = qRemove(&(svars->readyQ), index);
+            //Get the node that we need
+            p = qRemove(&(svars->readyQ), index);
 
+            //Check if qRemove returned NULL before using p
             if (p == NULL) {
                 // readyQ was empty — CPU stays idle this tick.
                 printf("No process to schedule\n");
-            } else {
+            }   
+            else{
                 printf("Scheduling PID %d\n", p->PID);
             }
+        }
 
-            if (p != NULL) {
-                p->burstRemaining--;
+        //Once process is selected, decrement burstremaining
+        if (p != NULL) {
+            p->burstRemaining--;
 
-                if (p->burstRemaining == 0) {
-                    // Process is done — move it to finishedQ so main can
-                    // compute and print wait-time statistics at simulation end.
-                    pthread_mutex_lock(&(svars->finishedQLock));
-                    qInsert(&(svars->finishedQ), p);
-                    pthread_mutex_unlock(&(svars->finishedQLock));
+            if (p->burstRemaining == 0) {
+                // Process is done — move it to finishedQ so main can
+                // compute and print wait-time statistics at simulation end.
+                pthread_mutex_lock(&(svars->finishedQLock));
+                qInsert(&(svars->finishedQ), p);
+                pthread_mutex_unlock(&(svars->finishedQLock));
 
-                    // CPU is now idle; it will select a new process next tick.
-                    p = NULL;
-                }
-                else{
-                    //put the process back into the readyQ to continue
-                    p->requeued = true;
-                    qInsert(&(svars->readyQ), p);
-                }
+                // CPU is now idle; it will select a new process next tick.
+                p = NULL;
             }
         }
+        
 
         //Release the lock only after the swap is performed
         pthread_mutex_unlock(&(svars->readyQLock));

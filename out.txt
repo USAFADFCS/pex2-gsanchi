@@ -1,0 +1,154 @@
+Platform : linux
+Samples  : SampleRuns/linux
+
+Compiling...
+Compile successful.
+
+Test          Result
+----          ------
+fifo_1        PASS
+fifo_2        PASS
+sjf_1         PASS
+sjf_2         PASS
+npp_1         PASS
+npp_2         PASS
+rr_1          FAIL
+    --- first difference (your output vs expected) ---
+    8a9
+    > Scheduling PID 0
+    13d13
+    < 	0: 0, 2, 10, 10, 1, 1, FALSE
+    22d21
+    < 	0: 0, 2, 10, 10, 2, 2, FALSE
+    31d29
+    < 	0: 0, 2, 10, 10, 3, 3, FALSE
+    35a34
+    > Scheduling PID 0
+    40d38
+    < 	0: 0, 2, 10, 10, 4, 4, FALSE
+    49d46
+    < 	0: 0, 2, 10, 10, 5, 5, FALSE
+    59d55
+    < 	0: 0, 2, 10, 10, 6, 6, FALSE
+    65a62
+    > Scheduling PID 1
+    70,71d66
+    < 	0: 0, 2, 10, 10, 7, 7, FALSE
+    ---------------------------------------------------
+rr_2          FAIL
+    --- first difference (your output vs expected) ---
+    8a9,10
+    > Scheduling PID 0
+    > No process to schedule
+    13d14
+    < 	0: 0, 2, 10, 10, 1, 1, FALSE
+    17a19
+    > No process to schedule
+    22d23
+    < 	0: 0, 2, 10, 10, 2, 2, FALSE
+    26a28
+    > No process to schedule
+    31d32
+    < 	0: 0, 2, 10, 10, 3, 3, FALSE
+    35a37,38
+    > Scheduling PID 0
+    > No process to schedule
+    40d42
+    < 	0: 0, 2, 10, 10, 4, 4, FALSE
+    44a47
+    > Scheduling PID 1
+    ---------------------------------------------------
+srt_1         FAIL
+    --- first difference (your output vs expected) ---
+    14d13
+    < 	0: 0, 2, 10, 9, 0, 1, TRUE
+    19d17
+    < Scheduling PID 0
+    24d21
+    < 	0: 0, 2, 10, 8, 0, 2, TRUE
+    29d25
+    < Scheduling PID 0
+    34d29
+    < 	0: 0, 2, 10, 7, 0, 3, TRUE
+    39d33
+    < Scheduling PID 0
+    44d37
+    < 	0: 0, 2, 10, 6, 0, 4, TRUE
+    54,55c47
+    < 	0: 0, 2, 10, 6, 0, 5, TRUE
+    < 	1: 4, 2, 4, 3, 0, 1, TRUE
+    ---
+    > 	0: 0, 2, 10, 6, 0, 1, TRUE
+    60d51
+    ---------------------------------------------------
+srt_2         FAIL
+    --- first difference (your output vs expected) ---
+    10c10
+    < Scheduling PID 0
+    ---
+    > No process to schedule
+    15d14
+    < 	0: 0, 2, 10, 8, 0, 1, TRUE
+    20,21c19
+    < Scheduling PID 0
+    < Scheduling PID 0
+    ---
+    > No process to schedule
+    26d23
+    < 	0: 0, 2, 10, 6, 0, 2, TRUE
+    31,32c28
+    < Scheduling PID 0
+    < Scheduling PID 0
+    ---
+    > No process to schedule
+    37d32
+    < 	0: 0, 2, 10, 4, 0, 3, TRUE
+    ---------------------------------------------------
+pp_1          FAIL
+    --- first difference (your output vs expected) ---
+    8a9
+    > Scheduling PID 0
+    13d13
+    < 	0: 0, 2, 10, 10, 1, 1, FALSE
+    22d21
+    < 	0: 0, 2, 10, 10, 2, 2, FALSE
+    31d29
+    < 	0: 0, 2, 10, 10, 3, 3, FALSE
+    40d37
+    < 	0: 0, 2, 10, 10, 4, 4, FALSE
+    49d45
+    < 	0: 0, 2, 10, 10, 5, 5, FALSE
+    59d54
+    < 	0: 0, 2, 10, 10, 6, 6, FALSE
+    70d64
+    < 	0: 0, 2, 10, 10, 7, 7, FALSE
+    82d75
+    < 	0: 0, 2, 10, 10, 8, 8, FALSE
+    95d87
+    < 	0: 0, 2, 10, 10, 9, 9, FALSE
+    ---------------------------------------------------
+pp_2          FAIL
+    --- first difference (your output vs expected) ---
+    8a9,10
+    > Scheduling PID 0
+    > No process to schedule
+    13d14
+    < 	0: 0, 2, 10, 10, 1, 1, FALSE
+    17a19
+    > No process to schedule
+    22d23
+    < 	0: 0, 2, 10, 10, 2, 2, FALSE
+    26a28
+    > No process to schedule
+    31d32
+    < 	0: 0, 2, 10, 10, 3, 3, FALSE
+    35a37
+    > No process to schedule
+    40d41
+    < 	0: 0, 2, 10, 10, 4, 4, FALSE
+    44a46
+    > Scheduling PID 1
+    49,50d50
+    ---------------------------------------------------
+
+Results: 6 / 12 passed  (0 skipped)
