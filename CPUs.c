@@ -173,7 +173,7 @@ void* NPPcpu(void* param) {
 
             // Index 0 = head of the list = the process that has been waiting
             // the position of the process with the shortest burstRemaining
-            int index = qShortest(&(svars->readyQ));
+            int index = qPriority(&(svars->readyQ));
             p = qRemove(&(svars->readyQ), index);
 
             if (p == NULL) {
@@ -234,10 +234,54 @@ void* SRTFcpu(void* param) {
     int threadNum = ((CpuParams*) param)->threadNumber;
     SharedVars* svars = ((CpuParams*) param)->svars;
 
-    // Process* p = NULL;  // TODO: uncomment when you implement this function
+    Process* p = NULL;  // TODO: uncomment when you implement this function
+
+    int min = qShortestBR(&(svars->readyQ));
 
     while (1) {
+        
         sem_wait(svars->cpuSems[threadNum]);
+
+        //Lock it first them perform the check to prevent race conditions
+        pthread_mutex_lock(&(svars->readyQLock));
+        
+        //Check each loop to see which process has the shortest remaining time
+        if(){    
+            p = qShortest(&(svars->readyQ));
+
+            //Not going to remove, just going to remove a burst
+            //p = qRemove(&(svars->readyQ), index);
+
+            if (p == NULL) {
+                // readyQ was empty — CPU stays idle this tick.
+                printf("No process to schedule\n");
+            } else {
+                printf("Scheduling PID %d\n", p->PID);
+            }
+
+            if (p != NULL) {
+                p->burstRemaining--;
+
+                if (p->burstRemaining == 0) {
+                    // Process is done — move it to finishedQ so main can
+                    // compute and print wait-time statistics at simulation end.
+                    pthread_mutex_lock(&(svars->finishedQLock));
+                    qInsert(&(svars->finishedQ), p);
+                    pthread_mutex_unlock(&(svars->finishedQLock));
+
+                    // CPU is now idle; it will select a new process next tick.
+                    p = NULL;
+                }
+                else{
+                    //put the process back into the readyQ to continue
+                    p->requeued = true;
+                    qInsert(&(svars->readyQ), p);
+                }
+            }
+        }
+
+        //Release the lock only after the swap is performed
+        pthread_mutex_unlock(&(svars->readyQLock));
 
         sem_post(svars->mainSem);
     }
